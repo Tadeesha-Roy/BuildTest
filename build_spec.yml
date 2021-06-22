@@ -1,0 +1,45 @@
+version: 0.1
+component: build
+timeoutInSeconds: 6000
+runAs: root
+shell: bash
+env:
+  variables:
+    "testEnv" : "This is a test variable!!"
+    "VERS" : 20.0
+
+steps:
+  - type: Command
+    name: "PreReq install"
+    command: |
+      yum -y install curl
+  - type: Command
+    name: "Dockerize"
+    command: |
+      docker build . --tag docktest:1.0
+  - type: Command
+    name: "Run the app Locally"
+    command: |
+      docker run -d -p 5000:5000 --name docktest docktest:1.0
+  - type: Command
+    name: "Shutdown the app"
+    command: |
+      docker stop docktest >> docktest-result.txt
+      docker save -o hello_1.0.tar docktest:1.0
+      docker rm docktest >> docktest-result.txt
+      date >> docktest-result.txt
+
+outputArtifacts:
+  - name: docktest-result
+    type: BINARY
+    location: docktest-result.txt
+    artifactParams:
+      testEnv: ${testEnv}
+      vers: 1.0
+      
+  - name: hello
+    type: BINARY
+    location: hello_1.0.tar
+    artifactParams:
+      vers: ${VERS}
+      message: ${testEnv}
